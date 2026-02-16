@@ -43,6 +43,7 @@ func dataSourceBot() *schema.Resource {
 			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
+				ValidateFunc: validation.StringLenBetween(0, 200),
 			},
 			"detect_sentiment": {
 				Type:     schema.TypeBool,
@@ -59,6 +60,7 @@ func dataSourceBot() *schema.Resource {
 			"idle_session_ttl_in_seconds": {
 				Type:     schema.TypeInt,
 				Computed: true,
+				ValidateFunc: validation.IntBetween(60, 86400),
 			},
 			names.AttrLastUpdatedDate: {
 				Type:     schema.TypeString,
@@ -76,6 +78,7 @@ func dataSourceBot() *schema.Resource {
 			"nlu_intent_confidence_threshold": {
 				Type:     schema.TypeFloat,
 				Computed: true,
+				ValidateFunc: validation.FloatBetween(0, 1),
 			},
 			names.AttrStatus: {
 				Type:     schema.TypeString,
