@@ -5,6 +5,7 @@ package provider
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
@@ -18,19 +19,24 @@ import (
 // ProtoV5ProviderServerFactory returns a muxed terraform-plugin-go protocol v5 provider factory function.
 // This factory function is suitable for use with the terraform-plugin-go Serve function.
 // The primary (Plugin SDK) provider server is also returned (useful for testing).
+//
+// Enhancement:
+// Error handling in this function has been improved by wrapping errors with descriptive context using fmt.Errorf.
+// This provides clearer information about which step failed (primary provider, secondary provider, or mux server),
+// making debugging and troubleshooting easier for developers and users.
 func ProtoV5ProviderServerFactory(ctx context.Context) (func() tfprotov5.ProviderServer, *schema.Provider, error) {
 	internal.RegisterSmarterrFS()
 
 	primary, err := sdkv2.NewProvider(ctx)
 
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to initialize primary provider: %w", err)
 	}
 
 	secondary, err := framework.NewProvider(ctx, primary)
 
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to initialize secondary provider: %w", err)
 	}
 
 	servers := []func() tfprotov5.ProviderServer{
@@ -39,9 +45,8 @@ func ProtoV5ProviderServerFactory(ctx context.Context) (func() tfprotov5.Provide
 	}
 
 	muxServer, err := tf5muxserver.NewMuxServer(ctx, servers...)
-
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to initialize mux server: %w", err)
 	}
 
 	return muxServer.ProviderServer, primary, nil
